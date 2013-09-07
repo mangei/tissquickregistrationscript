@@ -40,7 +40,7 @@ Initial release
 
 this.options = {
     // global option to enable or disable the script [true,false]
-	scriptEnabled: false,
+	scriptEnabled: true,
 
 	// define here the type of registration [lva,group]
 	registrationType: "lva",
@@ -50,7 +50,7 @@ this.options = {
 	
 	// checks if you are at the correct lva page
 	// only if the number is right, the script is enabled [String]
-	lvaNumber: "182.711",
+	lvaNumber: "015.115",
 	
 	// autoGoToLVA: true,        // coming soon
 	
@@ -277,11 +277,9 @@ this.onGroupPage = function () {
 		}
 		
 	} else {
-	
 		if(getGroupCancelButton(id).length > 0) {
-		  pageOut('you are already registered in group: ' + options.nameOfGroup);
+		    pageOut('you are already registered in group: ' + options.nameOfGroup);
 		} else {
-		log(options.autoRefresh)
     		// Only refresh the page if the option is set and if the registration is not yet completed.
     		if(options.autoRefresh) {
     			refreshPage();
@@ -373,19 +371,19 @@ this.getRegistrationButton = function (id) {
     } else if(options.registrationType == "lva") {
         regButton = $("input:submit[value='Anmelden']");
     } else {
-        pageLog("registrationType Error: unkonw type '" + registrationType + "'");
+        pageLog("registrationType Error: unknown type '" + registrationType + "'");
     }
     return regButton;
 }
 
 this.getGroupCancelButton = function (id) {
-    var unregButton;
+    var unregButton = null;
 	if (options.registrationType == "group") {
         unregButton = $("#toggleContent"+id+" input:submit[value='Abmelden']");
     } else if(options.registrationType == "lva") {
-        unregButton = $("input:submit[value='Abmelden']");
+        unregButton = $("input:submit[value='Abmelden' && id!='registrationForm:confirmOkBtn']");
     } else {
-        pageLog("registrationType Error: unkonw type '" + registrationType + "'");
+        pageLog("registrationType Error: unknown type '" + registrationType + "'");
     }
     return unregButton;
 }
