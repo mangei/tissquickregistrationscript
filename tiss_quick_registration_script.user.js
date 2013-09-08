@@ -50,7 +50,7 @@ this.options = {
 	
 	// checks if you are at the correct lva page
 	// only if the number is right, the script is enabled [String]
-	lvaNumber: "015.115",
+	lvaNumber: "360.173",
 	
 	// autoGoToLVA: true,        // coming soon
 	
@@ -88,10 +88,10 @@ this.options = {
 	// define the specific time the script should start [Date]
 	// new Date(year, month, day, hours, minutes, seconds, milliseconds)
 	// note: months start with 0
-	specificStartTime: new Date(2013, 8, 7, 16, 34, 00, 0),
+	specificStartTime: new Date(2013, 8, 8, 09, 52, 30, 0),
 	
 	// if a specific time is defined, the script will refresh some ms sooner to adjust a delay [Integer]
-	delayAdjustmentInMs: 500,
+	delayAdjustmentInMs: 300,
 
 	// show log output of the script on screen [true,false]
 	showLog: true
@@ -148,7 +148,6 @@ this.tissQuickRegistration = function () {
 
 this.startTimer = function (startTime) {
 	var offset = startTime - new Date().getTime();
-	console.log("Starts in: "+offset+" milliseconds");
 	if(offset > 0) {
 		startRefreshTimer(startTime);
 	} else {
@@ -175,7 +174,7 @@ this.printTimeToStart = function (startTime) {
 	var out = "Refresh in: "+offset+" seconds";
 	log(out);
 	
-	pageOut(out);
+	pageCountdown(out);
 	
 	window.setTimeout(function() { printTimeToStart(startTime); }, 1000);
 }
@@ -278,7 +277,7 @@ this.onGroupPage = function () {
 		
 	} else {
 		if(getGroupCancelButton(id).length > 0) {
-		    pageOut('you are already registered in group: ' + options.nameOfGroup);
+		    pageOut('you are registered in group: ' + options.nameOfGroup);
 		} else {
     		// Only refresh the page if the option is set and if the registration is not yet completed.
     		if(options.autoRefresh) {
@@ -316,6 +315,10 @@ this.pageOut = function (text) {
     out.text(text);
 }
 
+this.pageCountdown = function (text) {
+    var out = getCountdownField();
+    out.text(text);
+}
 this.pageLog = function (text) {
     appendToLogField(text);
 }
@@ -327,6 +330,15 @@ this.getOutputField = function () {
 		outputField = getOutputField();
     }
 	return outputField;
+}
+
+this.getCountdownField = function () {
+	var countdownField = $("#TQRScriptCountdown");
+	if(countdownField.length == 0) {
+        injectCountdownField();
+		countdownField = getCountdownField();
+    }
+	return countdownField;
 }
 
 this.getLogField = function () {
@@ -346,6 +358,15 @@ this.injectOutputField = function () {
         el = log;
     }
 	el.before('<div id="TQRScriptOutput" style="color: red; font-weight: bold; font-size: 14pt; padding: 8px 0px;"></div>');
+}
+
+this.injectCountdownField = function () {
+    var el = $('#contentInner')
+    var log = $('#TQRScriptLog')
+    if(log.length) {
+        el = log;
+    }
+	el.before('<div id="TQRScriptCountdown" style="color: blue; font-weight: bold; font-size: 14pt; padding: 8px 0px;"></div>');
 }
 
 this.injectLogField = function () {
@@ -381,7 +402,9 @@ this.getGroupCancelButton = function (id) {
 	if (options.registrationType == "group") {
         unregButton = $("#toggleContent"+id+" input:submit[value='Abmelden']");
     } else if(options.registrationType == "lva") {
-        unregButton = $("input:submit[value='Abmelden' && id!='registrationForm:confirmOkBtn']");
+        unregButton = $("input:submit[value='Abmelden']").filter(function (index) {
+            return $(this).attr("id") != 'registrationForm:confirmOkBtn';
+        });
     } else {
         pageLog("registrationType Error: unknown type '" + registrationType + "'");
     }
@@ -446,7 +469,7 @@ this.doSemesterCheck = function () {
 }
 
 this.getFormatedDate = function (date) {
-    return "" + date.getDay()
+    return "" + date.getDate()
      + "." + (date.getMonth()+1)
      + "." + date.getFullYear()
      + " " + date.getHours()
