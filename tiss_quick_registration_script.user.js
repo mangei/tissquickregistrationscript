@@ -11,9 +11,6 @@
 /*
  Changelog:
 
- v1.5 [undefined]
- ~ format code
-
  v1.4 [07.09.2013]
  + show or hide logoutput on screen (option: showLog [true/false])
  + many improvements
@@ -51,10 +48,20 @@
         // name of you the group you want to join (only for registrationType 'group') [String]
         nameOfGroup: "Gruppe B",
 
+        // checks if you are at the correct lva page
+        lvaCheckEnabled: true,
+
         // only if the number is right, the script is enabled [String]
         lvaNumber: "360.173",
 
+        // if you have multiple study codes, enter here the study code number you want
+        // to register for eg. '123456' (no blanks). Otherwise leave empty.
+        studyCode: '',
+
         // autoGoToLVA: true,        // coming soon
+
+        // checks if you are at the correct semester
+        lvaSemesterCheckEnabled: true,
 
         // only if the semester is right, the script is enabled [String]
         lvaSemester: "2013W",
@@ -125,8 +132,8 @@
             }
 
             // test if the lva and group exists
-            if (doLvaCheck()) {
-                if (doSemesterCheck()) {
+            if (!config.lvaCheckEnabled || doLvaCheck()) {
+                if (!config.lvaSemesterCheckEnabled || doSemesterCheck()) {
                     var groupLabel = doGroupCheck();
                     if (groupLabel != null) {
                         highlight(groupLabel)
@@ -191,6 +198,7 @@
         var tab = getSelectedTab();
         var confirmButton = getConfirmButton();
         var okButton = getOkButton();
+        var studyCodeSelect = getStudyCodeSelect();
 
         log("tab: " + tab);
         log("confirmButton: " + confirmButton);
@@ -200,6 +208,8 @@
             onLVAPage();
         } else if (tab == "Gruppen") {
             onGroupPage();
+        } else if (studyCodeSelect.length > 0) {
+            onStudyCodeSelectPage();
         } else if (confirmButton.length > 0) {
             onConfirmPage();
         } else if (okButton.length > 0) {
@@ -232,11 +242,11 @@
     };
 
     this.onGroupPage = function () {
-        if (!doLvaCheck()) {
+        if (config.lvaCheckEnabled && !doLvaCheck()) {
             return;
         }
 
-        if (!doSemesterCheck()) {
+        if (config.semesterCheckEnabled && !doSemesterCheck()) {
             return;
         }
 
@@ -287,6 +297,19 @@
                 }
                 pageOut('no registration button found');
             }
+        }
+    };
+
+    this.onStudyCodeSelectPage = function () {
+        var studyCodeSelect = getStudyCodeSelect();
+        var confirmButton = getConfirmButton();
+        highlight(confirmButton);
+        if (config.studyCode !== undefined && config.studyCode.length > 0) {
+            setSelectValue(studyCodeSelect, config.studyCode);
+        }
+        confirmButton.focus();
+        if (options.autoConfirm) {
+            confirmButton.click();
         }
     };
 
@@ -427,6 +450,10 @@
         return $("form#confirmForm input:submit[value='Ok']");
     };
 
+    this.getStudyCodeSelect = function () {
+        return $("#regForm:studyCode");
+    };
+
     this.getGroupLabel = function (nameOfGroup) {
         return $("span:contains('" + nameOfGroup + "')");
     };
@@ -437,6 +464,11 @@
 
     this.isCorrectSemester = function () {
         return getSubHeader().contains(options)
+    };
+
+    this.setSelectValue = function ($element, value) {
+        $element.find("option").removeAttr('selected');
+        $element.find("option[value='" + value + "']").attr('selected', 'selected');
     };
 
     this.doGroupCheck = function () {
