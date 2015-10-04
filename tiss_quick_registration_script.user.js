@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name       TISS Quick Registration Script
 // @namespace  http://www.manuelgeier.com/
-// @version    1.4
+// @version    1.5.0
 // @description  Script to help you to get into the group you want. Opens automatically the right panel, registers automatically and confirms your registration automatically. If you don't want the script to do everything automatically, the focus is already set on the right button, so you only need to confirm. There is also an option available to auto refresh the page, if the registration button is not available yet, so you can open the site and watch the script doing its work. You can also set a specific time when the script should reload the page and start.
 // @match      https://tiss.tuwien.ac.at/*
 // @copyright  2012+, Manuel Geier
@@ -11,8 +11,10 @@
 /*
  Changelog:
 
- v1.5 [undefined]
- ~ format code
+ v1.5.0 [04.10.2015]
+ + allow to enter a study code, if you have multiple ones
+ + add flags to en-/disable checks
+ ~ Code cleanup
 
  v1.4 [07.09.2013]
  + show or hide logoutput on screen (option: showLog [true/false])
@@ -51,10 +53,20 @@
         // name of you the group you want to join (only for registrationType 'group') [String]
         nameOfGroup: "Gruppe B",
 
+        // checks if you are at the correct lva page
+        lvaCheckEnabled: true,
+
         // only if the number is right, the script is enabled [String]
         lvaNumber: "360.173",
 
+        // if you have multiple study codes, enter here the study code number you want
+        // to register for eg. '123456' (no blanks). Otherwise leave empty. [String]
+        studyCode: '',
+
         // autoGoToLVA: true,        // coming soon
+
+        // checks if you are at the correct semester
+        lvaSemesterCheckEnabled: true,
 
         // only if the semester is right, the script is enabled [String]
         lvaSemester: "2013W",
@@ -125,8 +137,8 @@
             }
 
             // test if the lva and group exists
-            if (doLvaCheck()) {
-                if (doSemesterCheck()) {
+            if (!config.lvaCheckEnabled || doLvaCheck()) {
+                if (!config.lvaSemesterCheckEnabled || doSemesterCheck()) {
                     var groupLabel = doGroupCheck();
                     if (groupLabel != null) {
                         highlight(groupLabel)
@@ -135,8 +147,8 @@
             }
 
             if (options.startAtSpecificTime) {
-                pageLog("Scripts starts at: " + getFormatedDate(options.specificStartTime))
-                pageLog("Delay adjustment in ms: " + options.delayAdjustmentInMs)
+                pageLog("Scripts starts at: " + getFormatedDate(options.specificStartTime));
+                pageLog("Delay adjustment in ms: " + options.delayAdjustmentInMs);
                 startTimer(options.specificStartTime.getTime() - options.delayAdjustmentInMs);
             } else {
                 analysePage();
@@ -191,6 +203,7 @@
         var tab = getSelectedTab();
         var confirmButton = getConfirmButton();
         var okButton = getOkButton();
+        var studyCodeSelect = getStudyCodeSelect();
 
         log("tab: " + tab);
         log("confirmButton: " + confirmButton);
@@ -200,6 +213,8 @@
             onLVAPage();
         } else if (tab == "Gruppen") {
             onGroupPage();
+        } else if (studyCodeSelect.length > 0) {
+            onStudyCodeSelectPage();
         } else if (confirmButton.length > 0) {
             onConfirmPage();
         } else if (okButton.length > 0) {
@@ -232,11 +247,11 @@
     };
 
     this.onGroupPage = function () {
-        if (!doLvaCheck()) {
+        if (config.lvaCheckEnabled && !doLvaCheck()) {
             return;
         }
 
-        if (!doSemesterCheck()) {
+        if (config.semesterCheckEnabled && !doSemesterCheck()) {
             return;
         }
 
@@ -255,7 +270,6 @@
 
         // open the panel if the option is activated
         if (options.openPanel) {
-            log("asdf")
             $("#toggleContent" + id).show();
             // for some reason, we have to wait some time here and try it again :/
             setTimeout(function () {
@@ -287,6 +301,19 @@
                 }
                 pageOut('no registration button found');
             }
+        }
+    };
+
+    this.onStudyCodeSelectPage = function () {
+        var studyCodeSelect = getStudyCodeSelect();
+        var confirmButton = getConfirmButton();
+        highlight(confirmButton);
+        if (config.studyCode !== undefined && config.studyCode.length > 0) {
+            setSelectValue(studyCodeSelect, config.studyCode);
+        }
+        confirmButton.focus();
+        if (options.autoConfirm) {
+            confirmButton.click();
         }
     };
 
@@ -353,8 +380,8 @@
     };
 
     this.injectOutputField = function () {
-        var el = $('#contentInner')
-        var log = $('#TQRScriptLog')
+        var el = $('#contentInner');
+        var log = $('#TQRScriptLog');
         if (log.length) {
             el = log;
         }
@@ -362,8 +389,8 @@
     };
 
     this.injectCountdownField = function () {
-        var el = $('#contentInner')
-        var log = $('#TQRScriptLog')
+        var el = $('#contentInner');
+        var log = $('#TQRScriptLog');
         if (log.length) {
             el = log;
         }
@@ -427,6 +454,10 @@
         return $("form#confirmForm input:submit[value='Ok']");
     };
 
+    this.getStudyCodeSelect = function () {
+        return $("#regForm:studyCode");
+    };
+
     this.getGroupLabel = function (nameOfGroup) {
         return $("span:contains('" + nameOfGroup + "')");
     };
@@ -437,6 +468,11 @@
 
     this.isCorrectSemester = function () {
         return getSubHeader().contains(options)
+    };
+
+    this.setSelectValue = function ($element, value) {
+        $element.find("option").removeAttr('selected');
+        $element.find("option[value='" + value + "']").attr('selected', 'selected');
     };
 
     this.doGroupCheck = function () {
@@ -451,8 +487,8 @@
 
     this.doLvaCheck = function () {
         var lvaNumber = getLVANumber();
-        lvaNumber = lvaNumber.replace(/[^\d]/, '')
-        var optionsLvaNumber = options.lvaNumber.replace(/[^\d]/, '')
+        lvaNumber = lvaNumber.replace(/[^\d]/, '');
+        var optionsLvaNumber = options.lvaNumber.replace(/[^\d]/, '');
         if (lvaNumber != optionsLvaNumber) {
             pageOut('wrong lva number error: expected: ' + optionsLvaNumber + ', got: ' + lvaNumber);
             return false;
