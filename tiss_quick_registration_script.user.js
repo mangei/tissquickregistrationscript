@@ -137,8 +137,8 @@
             }
 
             // test if the lva and group exists
-            if (!config.lvaCheckEnabled || doLvaCheck()) {
-                if (!config.lvaSemesterCheckEnabled || doSemesterCheck()) {
+            if (!options.lvaCheckEnabled || doLvaCheck()) {
+                if (!options.lvaSemesterCheckEnabled || doSemesterCheck()) {
                     var groupLabel = doGroupCheck();
                     if (groupLabel != null) {
                         highlight(groupLabel)
@@ -247,11 +247,11 @@
     };
 
     this.onGroupPage = function () {
-        if (config.lvaCheckEnabled && !doLvaCheck()) {
+        if (options.lvaCheckEnabled && !doLvaCheck()) {
             return;
         }
 
-        if (config.semesterCheckEnabled && !doSemesterCheck()) {
+        if (options.semesterCheckEnabled && !doSemesterCheck()) {
             return;
         }
 
@@ -308,8 +308,8 @@
         var studyCodeSelect = getStudyCodeSelect();
         var confirmButton = getConfirmButton();
         highlight(confirmButton);
-        if (config.studyCode !== undefined && config.studyCode.length > 0) {
-            setSelectValue(studyCodeSelect, config.studyCode);
+        if (options.studyCode !== undefined && options.studyCode.length > 0) {
+            setSelectValue(studyCodeSelect, options.studyCode);
         }
         confirmButton.focus();
         if (options.autoConfirm) {
