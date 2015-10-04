@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name       TISS Quick Registration Script
 // @namespace  http://www.manuelgeier.com/
-// @version    1.4
+// @version    1.5.0
 // @description  Script to help you to get into the group you want. Opens automatically the right panel, registers automatically and confirms your registration automatically. If you don't want the script to do everything automatically, the focus is already set on the right button, so you only need to confirm. There is also an option available to auto refresh the page, if the registration button is not available yet, so you can open the site and watch the script doing its work. You can also set a specific time when the script should reload the page and start.
 // @match      https://tiss.tuwien.ac.at/*
 // @copyright  2012+, Manuel Geier
@@ -10,6 +10,11 @@
 
 /*
  Changelog:
+
+ v1.5.0 [04.10.2015]
+ + allow to enter a study code, if you have multiple ones
+ + add flags to en-/disable checks
+ ~ Code cleanup
 
  v1.4 [07.09.2013]
  + show or hide logoutput on screen (option: showLog [true/false])
@@ -55,7 +60,7 @@
         lvaNumber: "360.173",
 
         // if you have multiple study codes, enter here the study code number you want
-        // to register for eg. '123456' (no blanks). Otherwise leave empty.
+        // to register for eg. '123456' (no blanks). Otherwise leave empty. [String]
         studyCode: '',
 
         // autoGoToLVA: true,        // coming soon
