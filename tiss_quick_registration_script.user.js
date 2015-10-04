@@ -11,7 +11,7 @@
 /*
  Changelog:
 
- v1.5.0 [04.10.2015]
+ v1.5.1 [04.10.2015]
  + allow to enter a study code, if you have multiple ones
  + add flags to en-/disable checks
  ~ Code cleanup
