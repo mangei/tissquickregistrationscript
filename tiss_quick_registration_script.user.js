@@ -142,8 +142,8 @@
             }
 
             if (options.startAtSpecificTime) {
-                pageLog("Scripts starts at: " + getFormatedDate(options.specificStartTime))
-                pageLog("Delay adjustment in ms: " + options.delayAdjustmentInMs)
+                pageLog("Scripts starts at: " + getFormatedDate(options.specificStartTime));
+                pageLog("Delay adjustment in ms: " + options.delayAdjustmentInMs);
                 startTimer(options.specificStartTime.getTime() - options.delayAdjustmentInMs);
             } else {
                 analysePage();
@@ -265,7 +265,6 @@
 
         // open the panel if the option is activated
         if (options.openPanel) {
-            log("asdf")
             $("#toggleContent" + id).show();
             // for some reason, we have to wait some time here and try it again :/
             setTimeout(function () {
@@ -376,8 +375,8 @@
     };
 
     this.injectOutputField = function () {
-        var el = $('#contentInner')
-        var log = $('#TQRScriptLog')
+        var el = $('#contentInner');
+        var log = $('#TQRScriptLog');
         if (log.length) {
             el = log;
         }
@@ -385,8 +384,8 @@
     };
 
     this.injectCountdownField = function () {
-        var el = $('#contentInner')
-        var log = $('#TQRScriptLog')
+        var el = $('#contentInner');
+        var log = $('#TQRScriptLog');
         if (log.length) {
             el = log;
         }
@@ -483,8 +482,8 @@
 
     this.doLvaCheck = function () {
         var lvaNumber = getLVANumber();
-        lvaNumber = lvaNumber.replace(/[^\d]/, '')
-        var optionsLvaNumber = options.lvaNumber.replace(/[^\d]/, '')
+        lvaNumber = lvaNumber.replace(/[^\d]/, '');
+        var optionsLvaNumber = options.lvaNumber.replace(/[^\d]/, '');
         if (lvaNumber != optionsLvaNumber) {
             pageOut('wrong lva number error: expected: ' + optionsLvaNumber + ', got: ' + lvaNumber);
             return false;
