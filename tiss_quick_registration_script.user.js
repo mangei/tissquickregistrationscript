@@ -11,6 +11,11 @@
 /*
  Changelog:
 
+
+v1.5.1 [09.10.2015]
+ ~ Fix: adjusts group label selector
+ ~ Fix: Remove leading zero for month which leads to unintended octal interpretation
+ 
  v1.5 [04.10.2015]
  + allow to enter a study code, if you have multiple ones
  + add flags to en-/disable checks
@@ -101,7 +106,7 @@
         // define the specific time the script should start [Date]
         // new Date(year, month, day, hours, minutes, seconds, milliseconds)
         // note: months start with 0
-        specificStartTime: new Date(2013, 8, 8, 09, 52, 30, 0),
+        specificStartTime: new Date(2013, 8, 8, 9, 52, 30, 0),
 
         // if a specific time is defined, the script will refresh some ms sooner to adjust a delay [Integer]
         delayAdjustmentInMs: 300,
@@ -459,7 +464,7 @@
     };
 
     this.getGroupLabel = function (nameOfGroup) {
-        return $("span:contains('" + nameOfGroup + "')");
+        return $(".groupWrapper .header_element span:contains('" + nameOfGroup + "')");
     };
 
     this.highlight = function (object) {
