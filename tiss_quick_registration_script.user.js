@@ -16,6 +16,8 @@
  ~ Fix: missing reference to 'options' object
  ~ Fix: wrong option name ('semesterCheckEnabled' instead of 'lvaSemesterCheckEnabled')
  ~ String/Number compare with === instead of ==, and !== instead of !=
+ ~ Fix #9: id no longer available for wrapper element. replace it by element itself and adjust selectors.
+ ~ Fix: toggle for groups (now without id selector)
 
  v1.5.1 [09.10.2015]
  ~ Fix: adjusts group label selector
@@ -59,16 +61,16 @@
         scriptEnabled: true,
 
         // define here the type of registration [lva,group]
-        registrationType: "lva",
+        registrationType: "group",
 
         // name of you the group you want to join (only for registrationType 'group') [String]
-        nameOfGroup: "Gruppe B",
+        nameOfGroup: "Gruppe 007",
 
         // checks if you are at the correct lva page
         lvaCheckEnabled: true,
 
         // only if the number is right, the script is enabled [String]
-        lvaNumber: "185.291",
+        lvaNumber: "123.456",
 
         // if you have multiple study codes, enter here the study code number you want
         // to register for eg. '123456' (no blanks). Otherwise leave empty. [String]
@@ -112,7 +114,7 @@
         // define the specific time the script should start [Date]
         // new Date(year, month, day, hours, minutes, seconds, milliseconds)
         // note: months start with 0
-        specificStartTime: new Date(2013, 8, 8, 9, 52, 30, 0),
+        specificStartTime: new Date(2016, 1 - 1, 1, 13, 37, 42, 0),
 
         // if a specific time is defined, the script will refresh some ms sooner to adjust a delay [Integer]
         delayAdjustmentInMs: 300,
@@ -277,24 +279,19 @@
         }
         self.highlight(groupLabel);
 
-        var idAttr = groupLabel.parent().attr('id');
-        self.log('idAttr: ' + idAttr);
-
-        // get the id
-        var id = idAttr.replace(/[^\d]/g, '');
-        self.log('id: ' + id);
+        var groupWrapper = groupLabel.closest('.groupWrapper');
 
         // open the panel if the option is activated
         if (options.openPanel) {
-            $('#toggleContent' + id).show();
+            groupWrapper.children().show();
             // for some reason, we have to wait some time here and try it again :/
             setTimeout(function () {
-                $('#toggleContent' + id).show();
+                groupWrapper.children().show();
             }, 100);
         }
 
         // search for the registration button
-        var regButton = self.getRegistrationButton(id);
+        var regButton = self.getRegistrationButton(groupWrapper);
         self.log('regButton: ' + regButton);
 
 
@@ -427,31 +424,31 @@
         log.html(newText);
     };
 
-    self.getRegistrationButton = function (id) {
+    self.getRegistrationButton = function (groupWrapper) {
         var regButton;
-        if (options.registrationType == "group") {
-            regButton = $("#toggleContent" + id + " input:submit[value='Anmelden']");
-            if (regButton.length == 0) {
-                regButton = $("#toggleContent" + id + " input:submit[value='Voranmelden']");
-                if (regButton.length == 0) {
-                    regButton = $("#toggleContent" + id + " input:submit[value='Voranmeldung']");
+        if (options.registrationType === "group") {
+            regButton = $(groupWrapper).find("input:submit[value='Anmelden']");
+            if (regButton.length === 0) {
+                regButton = $(groupWrapper).find("input:submit[value='Voranmelden']");
+                if (regButton.length === 0) {
+                    regButton = $(groupWrapper).find("input:submit[value='Voranmeldung']");
                 }
             }
-        } else if (options.registrationType == "lva") {
-            regButton = $("input:submit[value='Anmelden']");
+        } else if (options.registrationType === "lva") {
+            regButton = $(groupWrapper).find("input:submit[value='Anmelden']");
         } else {
             self.pageLog("registrationType Error: unknown type '" + options.registrationType + "'");
         }
         return regButton;
     };
 
-    self.getGroupCancelButton = function (id) {
+    self.getGroupCancelButton = function (groupWrapper) {
         var unregButton = null;
-        if (options.registrationType == "group") {
-            unregButton = $("#toggleContent" + id + " input:submit[value='Abmelden']");
-        } else if (options.registrationType == "lva") {
-            unregButton = $("input:submit[value='Abmelden']").filter(function (index) {
-                return $(this).attr("id") != 'registrationForm:confirmOkBtn';
+        if (options.registrationType === "group") {
+            unregButton = $(groupWrapper).find("input:submit[value='Abmelden']");
+        } else if (options.registrationType === "lva") {
+            unregButton = $(groupWrapper).find("input:submit[value='Abmelden']").filter(function (index) {
+                return $(this).attr("id") !== 'registrationForm:confirmOkBtn';
             });
         } else {
             self.pageLog("registrationType Error: unknown type '" + options.registrationType + "'");
