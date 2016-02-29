@@ -11,11 +11,16 @@
 /*
  Changelog:
 
+ v1.5.3 [29.02.2016]
+ ~ Added: .gitignore
+ ~ Fix: missing reference to 'options' object
+ ~ Fix: wrong option name ('semesterCheckEnabled' instead of 'lvaSemesterCheckEnabled')
+ ~ String/Number compare with === instead of ==, and !== instead of !=
 
-v1.5.1 [09.10.2015]
+ v1.5.1 [09.10.2015]
  ~ Fix: adjusts group label selector
  ~ Fix: Remove leading zero for month which leads to unintended octal interpretation
- 
+
  v1.5 [04.10.2015]
  + allow to enter a study code, if you have multiple ones
  + add flags to en-/disable checks
@@ -43,12 +48,13 @@ v1.5.1 [09.10.2015]
  */
 
 (function TissQuickRegistrationClass() {
+    var self = this;
 
     ///////////////////////////////////////////////////////////////////////
     // Configurate the script here
     //
 
-    this.options = {
+    var options = {
         // global option to enable or disable the script [true,false]
         scriptEnabled: true,
 
@@ -62,7 +68,7 @@ v1.5.1 [09.10.2015]
         lvaCheckEnabled: true,
 
         // only if the number is right, the script is enabled [String]
-        lvaNumber: "360.173",
+        lvaNumber: "185.291",
 
         // if you have multiple study codes, enter here the study code number you want
         // to register for eg. '123456' (no blanks). Otherwise leave empty. [String]
@@ -74,7 +80,7 @@ v1.5.1 [09.10.2015]
         lvaSemesterCheckEnabled: true,
 
         // only if the semester is right, the script is enabled [String]
-        lvaSemester: "2013W",
+        lvaSemester: "2016S",
 
         // autoGoToSemester: true,   // coming soon
 
@@ -82,7 +88,7 @@ v1.5.1 [09.10.2015]
         openPanel: false,
 
         // automatically presses the register button if it is available [true,false]
-        autoRegister: true,
+        autoRegister: false,
 
         // automatically presses the confirm button for your registration [true,false]
         autoConfirm: true,
@@ -120,7 +126,12 @@ v1.5.1 [09.10.2015]
     ///////////////////////////////////////////////////////////////////////
 
 
-    this.extendJQuery = function () {
+    self.init = function () {
+        self.extendJQuery();
+        self.tissQuickRegistration();
+    };
+
+    self.extendJQuery = function () {
         jQuery.fn.justtext = function () {
             return $(this).clone()
                 .children()
@@ -130,51 +141,51 @@ v1.5.1 [09.10.2015]
         };
     };
 
-    this.tissQuickRegistration = function () {
+    self.tissQuickRegistration = function () {
         if (options.scriptEnabled) {
-            pageLog("TISS Quick Registration Script enabled");
-            pageLog("LVA Number: " + getLVANumber());
-            pageLog("LVA Name: " + getLVAName());
-            pageLog("Selected Tab: " + getSelectedTab());
+            self.pageLog("TISS Quick Registration Script enabled");
+            self.pageLog("LVA Number: " + self.getLVANumber());
+            self.pageLog("LVA Name: " + self.getLVAName());
+            self.pageLog("Selected Tab: " + self.getSelectedTab());
 
-            if (options.registrationType == "lva") {
+            if (options.registrationType === "lva") {
                 options.nameOfGroup = "LVA-Anmeldung";
             }
 
             // test if the lva and group exists
-            if (!options.lvaCheckEnabled || doLvaCheck()) {
-                if (!options.lvaSemesterCheckEnabled || doSemesterCheck()) {
-                    var groupLabel = doGroupCheck();
-                    if (groupLabel != null) {
-                        highlight(groupLabel)
+            if (!options.lvaCheckEnabled || self.doLvaCheck()) {
+                if (!options.lvaSemesterCheckEnabled || self.doSemesterCheck()) {
+                    var groupLabel = self.doGroupCheck();
+                    if (groupLabel !== null) {
+                        self.highlight(groupLabel);
                     }
                 }
             }
 
             if (options.startAtSpecificTime) {
-                pageLog("Scripts starts at: " + getFormatedDate(options.specificStartTime));
-                pageLog("Delay adjustment in ms: " + options.delayAdjustmentInMs);
-                startTimer(options.specificStartTime.getTime() - options.delayAdjustmentInMs);
+                self.pageLog("Scripts starts at: " + self.getFormatedDate(options.specificStartTime));
+                self.pageLog("Delay adjustment in ms: " + options.delayAdjustmentInMs);
+                self.startTimer(options.specificStartTime.getTime() - options.delayAdjustmentInMs);
             } else {
-                analysePage();
+                self.analysePage();
             }
 
         } else {
-            pageLog("TISS Quick Registration Script disabled");
+            self.pageLog("TISS Quick Registration Script disabled");
         }
     };
 
-    this.startTimer = function (startTime) {
+    self.startTimer = function (startTime) {
         var offset = startTime - new Date().getTime();
         if (offset > 0) {
-            startRefreshTimer(startTime);
+            self.startRefreshTimer(startTime);
         } else {
-            analysePage();
+            self.analysePage();
         }
     };
 
-    this.startRefreshTimer = function (startTime) {
-        printTimeToStart(startTime);
+    self.startRefreshTimer = function (startTime) {
+        self.printTimeToStart(startTime);
 
         var maxMillis = 2147483647;
         var offset = startTime - new Date().getTime();
@@ -184,137 +195,137 @@ v1.5.1 [09.10.2015]
             offset = maxMillis;
         }
 
-        window.setTimeout(refreshPage, offset);
+        window.setTimeout(self.refreshPage, offset);
     };
 
-    this.printTimeToStart = function (startTime) {
+    self.printTimeToStart = function (startTime) {
         var offset = (startTime - new Date().getTime()) / 1000;
         var out = "Refresh in: " + offset + " seconds";
-        log(out);
+        self.log(out);
 
-        pageCountdown(out);
+        self.pageCountdown(out);
 
         window.setTimeout(function () {
-            printTimeToStart(startTime);
+            self.printTimeToStart(startTime);
         }, 1000);
     };
 
-    this.refreshPage = function () {
+    self.refreshPage = function () {
         location.reload();
     };
 
-    this.analysePage = function () {
+    self.analysePage = function () {
 
-        var tab = getSelectedTab();
-        var confirmButton = getConfirmButton();
-        var okButton = getOkButton();
-        var studyCodeSelect = getStudyCodeSelect();
+        var tab = self.getSelectedTab();
+        var confirmButton = self.getConfirmButton();
+        var okButton = self.getOkButton();
+        var studyCodeSelect = self.getStudyCodeSelect();
 
-        log("tab: " + tab);
-        log("confirmButton: " + confirmButton);
-        log("okButton: " + okButton);
+        self.log("tab: " + tab);
+        self.log("confirmButton: " + confirmButton);
+        self.log("okButton: " + okButton);
 
-        if (tab == "LVA-Anmeldung") {
-            onLVAPage();
-        } else if (tab == "Gruppen") {
-            onGroupPage();
+        if (tab === "LVA-Anmeldung") {
+            self.onLVAPage();
+        } else if (tab === "Gruppen") {
+            self.onGroupPage();
         } else if (studyCodeSelect.length > 0) {
-            onStudyCodeSelectPage();
+            self.onStudyCodeSelectPage();
         } else if (confirmButton.length > 0) {
-            onConfirmPage();
+            self.onConfirmPage();
         } else if (okButton.length > 0) {
-            onConfirmInfoPage();
+            self.onConfirmInfoPage();
         }
     };
 
-    this.getLVANumber = function () {
-        return $("#contentInner h1 span:first").text().trim();
+    self.getLVANumber = function () {
+        return $('#contentInner h1 span:first').text().trim();
     };
 
-    this.getLVAName = function () {
-        return $("#contentInner h1").justtext();
+    self.getLVAName = function () {
+        return $('#contentInner h1').justtext();
     };
 
-    this.getSemester = function () {
-        return $("#contentInner h1 select").val();
+    self.getSemester = function () {
+        return $('#contentInner h1 select').val();
     };
 
-    this.getSelectedTab = function () {
-        return $("li.ui-tabs-selected").text().trim();
+    self.getSelectedTab = function () {
+        return $('li.ui-tabs-selected').text().trim();
     };
 
-    this.getSubHeader = function () {
-        return $("#contentInner #subHeader").text().trim();
+    self.getSubHeader = function () {
+        return $('#contentInner #subHeader').text().trim();
     };
 
-    this.onLVAPage = function () {
-        onGroupPage()
+    self.onLVAPage = function () {
+        self.onGroupPage();
     };
 
-    this.onGroupPage = function () {
-        if (options.lvaCheckEnabled && !doLvaCheck()) {
+    self.onGroupPage = function () {
+        if (options.lvaCheckEnabled && !self.doLvaCheck()) {
             return;
         }
 
-        if (options.semesterCheckEnabled && !doSemesterCheck()) {
+        if (options.lvaSemesterCheckEnabled && !self.doSemesterCheck()) {
             return;
         }
 
-        var groupLabel = doGroupCheck();
-        if (groupLabel == null) {
+        var groupLabel = self.doGroupCheck();
+        if (groupLabel === null) {
             return;
         }
-        highlight(groupLabel);
+        self.highlight(groupLabel);
 
         var idAttr = groupLabel.parent().attr('id');
-        log('idAttr: ' + idAttr);
+        self.log('idAttr: ' + idAttr);
 
         // get the id
         var id = idAttr.replace(/[^\d]/g, '');
-        log('id: ' + id);
+        self.log('id: ' + id);
 
         // open the panel if the option is activated
         if (options.openPanel) {
-            $("#toggleContent" + id).show();
+            $('#toggleContent' + id).show();
             // for some reason, we have to wait some time here and try it again :/
             setTimeout(function () {
-                $("#toggleContent" + id).show();
+                $('#toggleContent' + id).show();
             }, 100);
         }
 
         // search for the registration button
-        var regButton = getRegistrationButton(id);
-        log('regButton: ' + regButton);
+        var regButton = self.getRegistrationButton(id);
+        self.log('regButton: ' + regButton);
 
 
         // push the button
         if (regButton.length > 0) {
 
-            highlight(regButton);
+            self.highlight(regButton);
             regButton.focus();
 
             if (options.autoRegister) {
                 regButton.click();
             }
         } else {
-            if (getGroupCancelButton(id).length > 0) {
-                pageOut('you are registered in group: ' + options.nameOfGroup);
+            if (self.getGroupCancelButton(groupWrapper).length > 0) {
+                self.pageOut('you are registered in group: ' + options.nameOfGroup);
             } else {
                 // Only refresh the page if the option is set and if the registration is not yet completed.
                 if (options.autoRefresh) {
                     refreshPage();
                 }
-                pageOut('no registration button found');
+                self.pageOut('no registration button found');
             }
         }
     };
 
-    this.onStudyCodeSelectPage = function () {
-        var studyCodeSelect = getStudyCodeSelect();
-        var confirmButton = getConfirmButton();
-        highlight(confirmButton);
+    self.onStudyCodeSelectPage = function () {
+        var studyCodeSelect = self.getStudyCodeSelect();
+        var confirmButton = self.getConfirmButton();
+        self.highlight(confirmButton);
         if (options.studyCode !== undefined && options.studyCode.length > 0) {
-            setSelectValue(studyCodeSelect, options.studyCode);
+            self.setSelectValue(studyCodeSelect, options.studyCode);
         }
         confirmButton.focus();
         if (options.autoConfirm) {
@@ -322,69 +333,73 @@ v1.5.1 [09.10.2015]
         }
     };
 
-    this.onConfirmPage = function () {
-        var confirmButton = getConfirmButton();
-        highlight(confirmButton);
+    self.onConfirmPage = function () {
+        var confirmButton = self.getConfirmButton();
+        self.highlight(confirmButton);
         confirmButton.focus();
         if (options.autoConfirm) {
             confirmButton.click();
         }
     };
 
-    this.onConfirmInfoPage = function () {
-        var okButton = getOkButton();
-        highlight(okButton);
+    self.onConfirmInfoPage = function () {
+        var okButton = self.getOkButton();
+        self.highlight(okButton);
         if (options.autoOkPressAtEnd) {
             setTimeout(function () {
-                var okButton = getOkButton();
+                var okButton = self.getOkButton();
                 okButton.click();
             }, options.okPressAtEndDelayInMs);
         }
     };
 
-    this.pageOut = function (text) {
-        var out = getOutputField();
+    self.pageOut = function (text) {
+        var out = self.getOutputField();
         out.text(text);
     };
 
-    this.pageCountdown = function (text) {
-        var out = getCountdownField();
+    self.pageCountdown = function (text) {
+        var out = self.getCountdownField();
         out.text(text);
     };
 
-    this.pageLog = function (text) {
-        appendToLogField(text);
+    self.pageLog = function (text) {
+        self.appendToLogField(text);
     };
 
-    this.getOutputField = function () {
-        var outputField = $("#TQRScriptOutput");
+    self.getOutputField = function () {
+        var outputField = $('#TQRScriptOutput');
         if (outputField.length === 0) {
-            injectOutputField();
-            outputField = getOutputField();
+            self.injectOutputField();
+            outputField = self.getOutputField();
         }
         return outputField;
     };
 
-    this.getCountdownField = function () {
-        var countdownField = $("#TQRScriptCountdown");
+    self.getCountdownField = function () {
+        var countdownField = $('#TQRScriptCountdown');
         if (countdownField.length === 0) {
-            injectCountdownField();
-            countdownField = getCountdownField();
+            self.injectCountdownField();
+            countdownField = self.getCountdownField();
         }
         return countdownField;
     };
 
-    this.getLogField = function () {
-        var logField = $("#TQRScriptLog");
+    self.getLogField = function () {
+        var logField = $('#TQRScriptLog');
         if (logField.length === 0) {
-            injectLogField();
-            logField = getLogField();
-            options.showLog ? logField.show() : logField.hide()
+            self.injectLogField();
+            logField = self.getLogField();
+            if (options.showLog) {
+                logField.show();
+            } else {
+                logField.hide();
+            }
         }
         return logField;
     };
 
-    this.injectOutputField = function () {
+    self.injectOutputField = function () {
         var el = $('#contentInner');
         var log = $('#TQRScriptLog');
         if (log.length) {
@@ -393,7 +408,7 @@ v1.5.1 [09.10.2015]
         el.before('<div id="TQRScriptOutput" style="color: red; font-weight: bold; font-size: 14pt; padding: 8px 0px;"></div>');
     };
 
-    this.injectCountdownField = function () {
+    self.injectCountdownField = function () {
         var el = $('#contentInner');
         var log = $('#TQRScriptLog');
         if (log.length) {
@@ -402,17 +417,17 @@ v1.5.1 [09.10.2015]
         el.before('<div id="TQRScriptCountdown" style="color: blue; font-weight: bold; font-size: 14pt; padding: 8px 0px;"></div>');
     };
 
-    this.injectLogField = function () {
-        $("#contentInner").before('<div id="TQRScriptLog" style="color: black; background-color: #FFFCD9; font-size: 10pt;"><b>Information Log:</b></div>');
+    self.injectLogField = function () {
+        $('#contentInner').before('<div id="TQRScriptLog" style="color: black; background-color: #FFFCD9; font-size: 10pt;"><b>Information Log:</b></div>');
     };
 
-    this.appendToLogField = function (text) {
-        var log = getLogField();
+    self.appendToLogField = function (text) {
+        var log = self.getLogField();
         var newText = log.html() + "<br />" + text;
         log.html(newText);
     };
 
-    this.getRegistrationButton = function (id) {
+    self.getRegistrationButton = function (id) {
         var regButton;
         if (options.registrationType == "group") {
             regButton = $("#toggleContent" + id + " input:submit[value='Anmelden']");
@@ -425,12 +440,12 @@ v1.5.1 [09.10.2015]
         } else if (options.registrationType == "lva") {
             regButton = $("input:submit[value='Anmelden']");
         } else {
-            pageLog("registrationType Error: unknown type '" + registrationType + "'");
+            self.pageLog("registrationType Error: unknown type '" + options.registrationType + "'");
         }
         return regButton;
     };
 
-    this.getGroupCancelButton = function (id) {
+    self.getGroupCancelButton = function (id) {
         var unregButton = null;
         if (options.registrationType == "group") {
             unregButton = $("#toggleContent" + id + " input:submit[value='Abmelden']");
@@ -439,86 +454,86 @@ v1.5.1 [09.10.2015]
                 return $(this).attr("id") != 'registrationForm:confirmOkBtn';
             });
         } else {
-            pageLog("registrationType Error: unknown type '" + registrationType + "'");
+            self.pageLog("registrationType Error: unknown type '" + options.registrationType + "'");
         }
         return unregButton;
     };
 
-    this.getConfirmButton = function () {
+    self.getConfirmButton = function () {
         var confirmButton = $("form#regForm input:submit[value='Anmelden']");
-        if (confirmButton.length == 0) {
+        if (confirmButton.length === 0) {
             confirmButton = $("form#regForm input:submit[value='Voranmelden']");
-            if (confirmButton.length == 0) {
+            if (confirmButton.length === 0) {
                 confirmButton = $("form#regForm input:submit[value='Voranmeldung']");
             }
         }
         return confirmButton;
     };
 
-    this.getOkButton = function () {
+    self.getOkButton = function () {
         return $("form#confirmForm input:submit[value='Ok']");
     };
 
-    this.getStudyCodeSelect = function () {
+    self.getStudyCodeSelect = function () {
         return $("#regForm").find("select");
     };
 
-    this.getGroupLabel = function (nameOfGroup) {
+    self.getGroupLabel = function (nameOfGroup) {
         return $(".groupWrapper .header_element span:contains('" + nameOfGroup + "')");
     };
 
-    this.highlight = function (object) {
+    self.highlight = function (object) {
         object.css("background-color", "lightgreen");
     };
 
-    this.isCorrectSemester = function () {
-        return getSubHeader().contains(options)
+    self.isCorrectSemester = function () {
+        return self.getSubHeader().contains(options.lvaSemester);
     };
 
-    this.setSelectValue = function ($element, value) {
-        $element.find("option").removeAttr('selected');
-        $element.find("option[value='" + value + "']").attr('selected', 'selected');
+    self.setSelectValue = function ($element, value) {
+        $element.find('option').removeAttr('selected');
+        $element.find('option[value="' + value + '"]').attr('selected', 'selected');
     };
 
-    this.doGroupCheck = function () {
-        var groupLabel = getGroupLabel(options.nameOfGroup);
-        if (groupLabel.length == 0) {
-            pageOut('group not found error: ' + options.nameOfGroup);
+    self.doGroupCheck = function () {
+        var groupLabel = self.getGroupLabel(options.nameOfGroup);
+        if (groupLabel.length === 0) {
+            self.pageOut('group not found error: ' + options.nameOfGroup);
             return null;
         } else {
             return groupLabel;
         }
     };
 
-    this.doLvaCheck = function () {
-        var lvaNumber = getLVANumber();
+    self.doLvaCheck = function () {
+        var lvaNumber = self.getLVANumber();
         lvaNumber = lvaNumber.replace(/[^\d]/, '');
         var optionsLvaNumber = options.lvaNumber.replace(/[^\d]/, '');
-        if (lvaNumber != optionsLvaNumber) {
-            pageOut('wrong lva number error: expected: ' + optionsLvaNumber + ', got: ' + lvaNumber);
+        if (lvaNumber !== optionsLvaNumber) {
+            self.pageOut('wrong lva number error: expected: ' + optionsLvaNumber + ', got: ' + lvaNumber);
             return false;
         }
         return true;
     };
 
-    this.doSemesterCheck = function () {
-        var subheader = getSubHeader();
+    self.doSemesterCheck = function () {
+        var subheader = self.getSubHeader();
         if (subheader.indexOf(options.lvaSemester) === -1) {
-            pageOut('wrong semester error: expected: ' + options.lvaSemester + ', got: ' + subheader.substring(0, 5));
+            self.pageOut('wrong semester error: expected: ' + options.lvaSemester + ', got: ' + subheader.substring(0, 5));
             return false;
         }
         return true;
     };
 
-    this.getFormatedDate = function (date) {
+    self.getFormatedDate = function (date) {
         return "" + date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + ":" + date.getMilliseconds();
     };
 
-    this.log = function (message) {
+    self.log = function (message) {
         console.log(message);
     };
 
-    extendJQuery();
-    tissQuickRegistration();
 
+    // Initialize the script
+    self.init();
 })();
