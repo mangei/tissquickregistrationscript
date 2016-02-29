@@ -18,6 +18,7 @@
  ~ String/Number compare with === instead of ==, and !== instead of !=
  ~ Fix #9: id no longer available for wrapper element. replace it by element itself and adjust selectors.
  ~ Fix: toggle for groups (now without id selector)
+ ~ Fix: group name selector now matches the exact name and not only if it contains the name
 
  v1.5.1 [09.10.2015]
  ~ Fix: adjusts group label selector
@@ -476,7 +477,9 @@
     };
 
     self.getGroupLabel = function (nameOfGroup) {
-        return $(".groupWrapper .header_element span:contains('" + nameOfGroup + "')");
+        return $(".groupWrapper .header_element span").filter(function () {
+            return $(this).text().trim() === nameOfGroup;
+        });
     };
 
     self.highlight = function (object) {
