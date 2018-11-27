@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name       TISS Quick Registration Script
 // @namespace  http://www.manuelgeier.com/
-// @version    1.5.3
+// @version    1.5.4
 // @description  Script to help you to get into the group you want. Opens automatically the right panel, registers automatically and confirms your registration automatically. If you don't want the script to do everything automatically, the focus is already set on the right button, so you only need to confirm. There is also an option available to auto refresh the page, if the registration button is not available yet, so you can open the site and watch the script doing its work. You can also set a specific time when the script should reload the page and start.
 // @match      https://tiss.tuwien.ac.at/*
 // @copyright  2012+, Manuel Geier
@@ -10,6 +10,9 @@
 
 /*
  Changelog:
+
+ v.1.5.4 [27.11.2018]
+ ~ Added: exam-registration support
 
  v1.5.3 [29.02.2016]
  ~ Added: .gitignore
@@ -64,11 +67,16 @@
         // global option to enable or disable the script [true,false]
         scriptEnabled: true,
 
-        // define here the type of registration [lva,group]
+        // define here the type of registration [lva,group,exam]
         registrationType: "group",
 
         // name of you the group you want to join (only for registrationType 'group') [String]
-        nameOfGroup: "Gruppe 007",
+        nameOfGroup: "Gruppe 001",
+
+        // name of the exam which you want to join (only for registrationType 'exam') [String]
+        nameOfExam: "fillInNameOfExam",
+
+        dateOfExam: '', // not used yet
 
         // checks if you are at the correct lva page
         lvaCheckEnabled: true,
@@ -86,21 +94,21 @@
         lvaSemesterCheckEnabled: true,
 
         // only if the semester is right, the script is enabled [String]
-        lvaSemester: "2016S",
+        lvaSemester: "2018W",
 
         // autoGoToSemester: true,   // coming soon
 
         // automatically opens the detail panel of a group [true,false]
-        openPanel: false,
+        openPanel: true,
 
         // automatically presses the register button if it is available [true,false]
-        autoRegister: false,
+        autoRegister: true,
 
         // automatically presses the confirm button for your registration [true,false]
         autoConfirm: true,
 
         // continuously refresh the page until the script can register you [true,false]
-        autoRefresh: false,
+        autoRefresh: true,
 
         // automatically presses the ok button on the confirmation info page [true,false]
         autoOkPressAtEnd: true,
@@ -118,7 +126,7 @@
         // define the specific time the script should start [Date]
         // new Date(year, month, day, hours, minutes, seconds, milliseconds)
         // note: months start with 0
-        specificStartTime: new Date(2016, 1 - 1, 1, 13, 37, 42, 0),
+        specificStartTime: new Date(2018, 1 - 1, 1, 11, 11, 11, 0),
 
         // if a specific time is defined, the script will refresh some ms sooner to adjust a delay [Integer]
         delayAdjustmentInMs: 300,
@@ -161,9 +169,16 @@
             // test if the lva and group exists
             if (!options.lvaCheckEnabled || self.doLvaCheck()) {
                 if (!options.lvaSemesterCheckEnabled || self.doSemesterCheck()) {
-                    var groupLabel = self.doGroupCheck();
-                    if (groupLabel !== null) {
-                        self.highlight(groupLabel);
+                    if(options.registrationType !== "exam") { // own code
+                        var groupLabel = self.doGroupCheck();
+                        if (groupLabel !== null) {
+                            self.highlight(groupLabel);
+                        }
+                    } else {
+                        var examLabel = self.doExamCheck();
+                        if (examLabel !== null) {
+                            self.highlight(examLabel);
+                        }
                     }
                 }
             }
@@ -235,6 +250,8 @@
             self.onLVAPage();
         } else if (tab === "Gruppen") {
             self.onGroupPage();
+        } else if (tab === "Prüfungen") {
+            self.onExamPage();
         } else if (studyCodeSelect.length > 0) {
             self.onStudyCodeSelectPage();
         } else if (confirmButton.length > 0) {
@@ -245,15 +262,15 @@
     };
 
     self.getLVANumber = function () {
-        return $('#contentInner h1 span:first').text().trim();
+        return $('#contentInner').find('h1 span:first').text().trim();
     };
 
     self.getLVAName = function () {
-        return $('#contentInner h1').justtext();
+        return $('#contentInner').find('h1').justtext();
     };
 
     self.getSemester = function () {
-        return $('#contentInner h1 select').val();
+        return $('#contentInner').find('h1 select').val();
     };
 
     self.getSelectedTab = function () {
@@ -261,7 +278,7 @@
     };
 
     self.getSubHeader = function () {
-        return $('#contentInner #subHeader').text().trim();
+        return $('#contentInner').find('#subHeader').text().trim();
     };
 
     self.onLVAPage = function () {
@@ -311,6 +328,59 @@
         } else {
             if (self.getGroupCancelButton(groupWrapper).length > 0) {
                 self.pageOut('you are registered in group: ' + options.nameOfGroup);
+            } else {
+                // Only refresh the page if the option is set and if the registration is not yet completed.
+                if (options.autoRefresh) {
+                    refreshPage();
+                }
+                self.pageOut('no registration button found');
+            }
+        }
+    };
+
+    self.onExamPage = function () {
+        if (options.lvaCheckEnabled && !self.doLvaCheck()) {
+            return;
+        }
+
+        if (options.lvaSemesterCheckEnabled && !self.doSemesterCheck()) {
+            return;
+        }
+
+        var examLabel = self.doExamCheck();
+        if (examLabel === null) {
+            return;
+        }
+        self.highlight(examLabel);
+
+        var examWrapper = examLabel.closest('.groupWrapper');
+
+        // open the panel if the option is activated
+        if (options.openPanel) {
+            examWrapper.children().show();
+            // for some reason, we have to wait some time here and try it again :/
+            setTimeout(function () {
+                examWrapper.children().show();
+            }, 100);
+        }
+
+        // search for the registration button
+        var regButton = self.getRegistrationButton(examWrapper);
+        self.log('regButton: ' + regButton);
+
+
+        // push the button
+        if (regButton.length > 0) {
+
+            self.highlight(regButton);
+            regButton.focus();
+
+            if (options.autoRegister) {
+                regButton.click();
+            }
+        } else {
+            if (self.getGroupCancelButton(examWrapper).length > 0) {
+                self.pageOut('you are registered in exam: ' + options.nameOfExam);
             } else {
                 // Only refresh the page if the option is set and if the registration is not yet completed.
                 if (options.autoRefresh) {
@@ -438,6 +508,8 @@
                     regButton = $(groupWrapper).find("input:submit[value='Voranmeldung']");
                 }
             }
+        } else if (options.registrationType === "exam") {
+            regButton = $(groupWrapper).find("input:submit[value='Anmelden']");
         } else if (options.registrationType === "lva") {
             regButton = $(groupWrapper).find("input:submit[value='Anmelden']");
         } else {
@@ -449,6 +521,8 @@
     self.getGroupCancelButton = function (groupWrapper) {
         var unregButton = null;
         if (options.registrationType === "group") {
+            unregButton = $(groupWrapper).find("input:submit[value='Abmelden']");
+        } else if (options.registrationType === "exam") {
             unregButton = $(groupWrapper).find("input:submit[value='Abmelden']");
         } else if (options.registrationType === "lva") {
             unregButton = $(groupWrapper).find("input:submit[value='Abmelden']").filter(function (index) {
@@ -482,6 +556,19 @@
     self.getGroupLabel = function (nameOfGroup) {
         return $(".groupWrapper .header_element span").filter(function () {
             return $(this).text().trim() === nameOfGroup;
+        });
+    };
+
+    self.getExamLabel = function (nameOfExam) {
+        return $(".groupWrapper .header_element span").filter(function () {
+            var tmp = $(this).text().trim();
+            return tmp.match(nameOfExam);
+        });
+    };
+
+    self.getExamDate = function (dateOfExam) {
+        return $(".groupWrapper .header_element").filter(function () {
+            return $(this).text().trim() === dateOfExam;
         });
     };
 
@@ -526,6 +613,17 @@
             return false;
         }
         return true;
+    };
+
+    self.doExamCheck = function () {
+        var examLabel = self.getExamLabel(options.nameOfExam);
+        var examDate = self.getExamDate(options.dateOfExam);
+        if (examLabel.length === 0) {
+            self.pageOut('exam not found error: ' + options.nameOfExam);
+            return null;
+        } else {
+            return examLabel;
+        }
     };
 
     self.getFormatedDate = function (date) {
