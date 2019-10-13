@@ -10,6 +10,9 @@
 
 /*
  Changelog:
+ 
+ v.1.6.1 [13.10.2019]
+ ~ Fix: Ignore multiple spaces on group label comparison. (@zarmonious)
 
  v.1.6.0 [28.11.2018]
  + Added: exam-registration support (Thanks to @XtomtomX, #11)
@@ -555,7 +558,11 @@
 
     self.getGroupLabel = function (nameOfGroup) {
         return $(".groupWrapper .header_element span").filter(function () {
-            return $(this).text().trim() === nameOfGroup;
+            // Normalize group lables and configured group label before comparing.
+            var normName = $(this).text().trim().replace(/\s\s+/gi, ' ');
+            var normConfName = nameOfGroup.trim().replace(/\s\s+/gi, ' ');
+
+            return normName === normConfName;
         });
     };
 
