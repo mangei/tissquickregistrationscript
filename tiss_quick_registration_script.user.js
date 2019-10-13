@@ -557,10 +557,11 @@
     };
 
     self.getGroupLabel = function (nameOfGroup) {
+        // Normalize group lables and configured group label before comparing.
+        var normConfName = nameOfGroup.trim().replace(/\s\s+/gi, ' ');
+
         return $(".groupWrapper .header_element span").filter(function () {
-            // Normalize group lables and configured group label before comparing.
             var normName = $(this).text().trim().replace(/\s\s+/gi, ' ');
-            var normConfName = nameOfGroup.trim().replace(/\s\s+/gi, ' ');
 
             return normName === normConfName;
         });
