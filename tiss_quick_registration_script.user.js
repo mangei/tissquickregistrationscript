@@ -74,7 +74,7 @@
         nameOfGroup: "Gruppe 001",
 
         // name of the exam which you want to join (only for registrationType 'exam') [String]
-        nameOfExam: "fillInNameOfExam",
+        nameOfExam: "Name Of Exam",
 
         dateOfExam: '', // not used yet
 
@@ -94,7 +94,7 @@
         lvaSemesterCheckEnabled: true,
 
         // only if the semester is right, the script is enabled [String]
-        lvaSemester: "2018W",
+        lvaSemester: "2019W",
 
         // autoGoToSemester: true,   // coming soon
 
@@ -126,7 +126,7 @@
         // define the specific time the script should start [Date]
         // new Date(year, month, day, hours, minutes, seconds, milliseconds)
         // note: months start with 0
-        specificStartTime: new Date(2018, 1 - 1, 1, 11, 11, 11, 0),
+        specificStartTime: new Date(2020, 1 - 1, 9, 20, 27, 0, 0),
 
         // if a specific time is defined, the script will refresh some ms sooner to adjust a delay [Integer]
         delayAdjustmentInMs: 300,
@@ -169,7 +169,7 @@
             // test if the lva and group exists
             if (!options.lvaCheckEnabled || self.doLvaCheck()) {
                 if (!options.lvaSemesterCheckEnabled || self.doSemesterCheck()) {
-                    if(options.registrationType !== "exam") { // own code
+                    if (options.registrationType !== "exam") { // own code
                         var groupLabel = self.doGroupCheck();
                         if (groupLabel !== null) {
                             self.highlight(groupLabel);
@@ -221,7 +221,18 @@
 
     self.printTimeToStart = function (startTime) {
         var offset = (startTime - new Date().getTime()) / 1000;
-        var out = "Refresh in: " + offset + " seconds";
+        var out = "Refresh in: ";
+        var minutes = offset / 60;
+        if (minutes > 1) {
+            var hours = minutes / 60;
+            if (hours > 1) {
+                out += Math.floor(hours) + " hours, "
+                minutes = minutes % 60;
+            }
+            out += Math.floor(minutes) + " minutes and ";
+        }
+        var seconds = offset % 60;
+        out += Math.floor(seconds) + " seconds";
         self.log(out);
 
         self.pageCountdown(out);
