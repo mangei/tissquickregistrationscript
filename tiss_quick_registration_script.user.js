@@ -517,7 +517,9 @@
 
     self.getRegistrationButton = function (groupWrapper) {
         var regButton;
-        if (options.registrationType === "group") {
+        if (options.registrationType === "group"
+            || options.registrationType === "exam"
+            || options.registrationType === "lva") {
             regButton = $(groupWrapper).find("input:submit[value='Anmelden']");
             if (regButton.length === 0) {
                 regButton = $(groupWrapper).find("input:submit[value='Voranmelden']");
@@ -525,10 +527,6 @@
                     regButton = $(groupWrapper).find("input:submit[value='Voranmeldung']");
                 }
             }
-        } else if (options.registrationType === "exam") {
-            regButton = $(groupWrapper).find("input:submit[value='Anmelden']");
-        } else if (options.registrationType === "lva") {
-            regButton = $(groupWrapper).find("input:submit[value='Anmelden']");
         } else {
             self.pageLog("registrationType Error: unknown type '" + options.registrationType + "'");
         }
