@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name       TISS Quick Registration Script
 // @namespace  http://www.manuelgeier.com/
-// @version    1.6.2
+// @version    1.6.3
 // @description  Script to help you to get into the group you want. Opens automatically the right panel, registers automatically and confirms your registration automatically. If you don't want the script to do everything automatically, the focus is already set on the right button, so you only need to confirm. There is also an option available to auto refresh the page, if the registration button is not available yet, so you can open the site and watch the script doing its work. You can also set a specific time when the script should reload the page and start.
 // @match      https://tiss.tuwien.ac.at/*
 // @copyright  2012+, Manuel Geier, THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -10,6 +10,9 @@
 
 /*
  Changelog:
+ 
+ v.1.6.3 [18.12.2020]
+ + Added: date of exam support
 
  v.1.6.2 [09.01.2020]
  + Improve countdown format (Thanks @Heholord, #14)
@@ -82,7 +85,8 @@
         // name of the exam which you want to join (only for registrationType 'exam') [String]
         nameOfExam: "Name Of Exam",
 
-        dateOfExam: '', // not used yet
+        // date of the exam which you want to join, especially when there are multiple exams with the same name (only for registrationType 'exam') [String]
+        dateOfExam: '',
 
         // checks if you are at the correct lva page
         lvaCheckEnabled: true,
@@ -184,6 +188,7 @@
                         var examLabel = self.doExamCheck();
                         if (examLabel !== null) {
                             self.highlight(examLabel);
+                            self.pageLog("Prüfung: " + examLabel.text().trim());
                         }
                     }
                 }
@@ -586,9 +591,12 @@
         });
     };
 
-    self.getExamDate = function (dateOfExam) {
+    self.getExamDate = function (nameOfExam, dateOfExam) {
         return $(".groupWrapper .header_element").filter(function () {
-            return $(this).text().trim() === dateOfExam;
+            var examData = $(this).text().trim();
+            var examLabel = self.getExamLabel(nameOfExam).first().text().trim() + " ";
+            var examDate = examData.replace(examLabel, '');
+            return examDate.match(dateOfExam);
         });
     };
 
@@ -637,12 +645,15 @@
 
     self.doExamCheck = function () {
         var examLabel = self.getExamLabel(options.nameOfExam);
-        var examDate = self.getExamDate(options.dateOfExam);
+        var examData = self.getExamDate(options.nameOfExam, options.dateOfExam);
         if (examLabel.length === 0) {
             self.pageOut('exam not found error: ' + options.nameOfExam);
             return null;
+        } else if (examData.length === 0) {
+            self.pageOut('Date not found: ' + options.dateOfExam);
+            return null;
         } else {
-            return examLabel;
+            return examData;
         }
     };
 
