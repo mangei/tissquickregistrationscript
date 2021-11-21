@@ -10,6 +10,8 @@
 
 /*
  Changelog:
+ v.1.6.3 [21.11.2021]
+ ~ Fix: previously all exams on the correct date were valid, ignoring exam name
  
  v.1.6.3 [18.12.2020]
  + Added: date of exam support
@@ -596,7 +598,8 @@
             var examData = $(this).text().trim();
             var examLabel = self.getExamLabel(nameOfExam).first().text().trim() + " ";
             var examDate = examData.replace(examLabel, '');
-            return examDate.match(dateOfExam);
+            var examRemainder = examDate.replace(dateOfExam, '');
+            return !examRemainder && examData;
         });
     };
 
