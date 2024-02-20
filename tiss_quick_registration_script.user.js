@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name       TISS Quick Registration Script
 // @namespace  http://www.manuelgeier.com/
-// @version    1.6.3
+// @version    1.6.4
 // @description  Script to help you to get into the group you want. Opens automatically the right panel, registers automatically and confirms your registration automatically. If you don't want the script to do everything automatically, the focus is already set on the right button, so you only need to confirm. There is also an option available to auto refresh the page, if the registration button is not available yet, so you can open the site and watch the script doing its work. You can also set a specific time when the script should reload the page and start.
 // @match      https://tiss.tuwien.ac.at/*
 // @copyright  2020 Manuel Geier, MIT License
@@ -34,6 +34,11 @@ SOFTWARE.
 
 /*
  Changelog:
+
+  v.1.6.4 [23.01.2024]
+ + Added: autoGoToLVA support
+ + Added: autoGoToSemester support
+ (Greetings ~ Tobia5H :) )
  
  v.1.6.3 [18.12.2020]
  + Added: date of exam support
@@ -122,15 +127,19 @@ SOFTWARE.
         // to register for eg. '123456' (no blanks). Otherwise leave empty. [String]
         studyCode: '',
 
-        // autoGoToLVA: true,        // coming soon
+	// If you want to navigate automatically to the latest LVA-MAIN page, set this option to true.
+	// You need to set 'lvaNumber'!
+        autoGoToLVA: false,
 
         // checks if you are at the correct semester
         lvaSemesterCheckEnabled: true,
 
         // only if the semester is right, the script is enabled [String]
-        lvaSemester: "2019W",
+        lvaSemester: "2023W",
 
-        // autoGoToSemester: true,   // coming soon
+	// If you want to navigate automatically to the LVA/Exam/Group/page with the specified Semester, set this option to true.
+	// You need to set 'lvaNumber' and 'lvaSemester'!
+        autoGoToSemester: false,  
 
         // automatically opens the detail panel of a group [true,false]
         openPanel: true,
@@ -191,6 +200,34 @@ SOFTWARE.
 
     self.tissQuickRegistration = function () {
         if (options.scriptEnabled) {
+          	if (options.autoGoToLVA && options.autoGoToSemester) {
+              	// Check if options.lvaNumber and options.lvaSemester are set
+                alert("Option 'autoGoToLVA' and 'autoGoToSemester' are both set to 'true'.\nPlease set at least one of them to 'false'.");
+                console.error("Option 'autoGoToLVA' and 'autoGoToSemester' are both set to 'true'. Please set at least one of them to 'false'.");
+            } 
+          
+            if (options.autoGoToLVA && !options.autoGoToSemester) {
+              	// Check if options.lvaNumber and options.lvaSemester are set
+                if (!options.lvaNumber) {
+                  	alert("Option 'lvaNumber' must be set for navigation.");
+                    console.error("Options 'lvaNumber' must be set for navigation.");
+                    return;
+                } else {
+            			self.navigateToLVA();
+                }
+            } 
+          
+          	if (options.autoGoToSemester && !options.autoGoToLVA) {
+              	// Check if options.lvaNumber and options.lvaSemester are set
+                if (!options.lvaNumber || !options.lvaSemester) {
+                    alert("Options 'lvaNumber' and 'lvaSemester' must be set for navigation.");
+                    console.error("Options 'lvaNumber' and 'lvaSemester' must be set for navigation.");
+                    return;
+                } else {
+            			self.navigateToSemester();
+                }
+            }
+          
             self.pageLog("TISS Quick Registration Script enabled");
             self.pageLog("LVA Number: " + self.getLVANumber());
             self.pageLog("LVA Name: " + self.getLVAName());
@@ -684,6 +721,74 @@ SOFTWARE.
     self.getFormatedDate = function (date) {
         return "" + date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + ":" + date.getMilliseconds();
     };
+  
+    self.navigateToSemester = function () {
+      
+      	var specifiedURL = '';
+      
+      	if (options.registrationType === "lva") {
+            // URL for LVA registration type
+          	specifiedURL = 'https://tiss.tuwien.ac.at/education/course/courseRegistration.xhtml?courseNr=' + options.lvaNumber.replace(/[^\d]/, '') + '&semester=' + options.lvaSemester;
+            console.log("Registration type is LVA");
+        } else if (options.registrationType === "group") {
+            // URL for group registration type
+          	specifiedURL = 'https://tiss.tuwien.ac.at/education/course/groupList.xhtml?courseNr=' + options.lvaNumber.replace(/[^\d]/, '') + '&semester=' + options.lvaSemester;
+            console.log("Registration type is Group");
+        } else if (options.registrationType === "exam") {
+            // URL for exam registration type
+          	specifiedURL = 'https://tiss.tuwien.ac.at/education/course/examDateList.xhtml?courseNr=' + options.lvaNumber.replace(/[^\d]/, '') + '&semester=' + options.lvaSemester;
+            console.log("Registration type is Exam");
+        } else {
+            // URL for other or unknown registration types
+            // default to LVA main page
+          	specifiedURL = 'https://tiss.tuwien.ac.at/course/educationDetails.xhtml?courseNr=' + options.lvaNumber.replace(/[^\d]/, '');
+            console.log("Unknown registration type"); 
+        }
+
+      
+        // Get the current URL's search parameters
+        var urlSearchParams = new URLSearchParams(window.location.search);
+
+        // Check if the specified query parameters exist, and if true, delete them
+				if (urlSearchParams.has('dswid') && urlSearchParams.has('dsrid')) {
+    			urlSearchParams.delete('dswid');
+    			urlSearchParams.delete('dsrid');
+				}
+
+        // Build the modified URL
+        var currentURL = window.location.origin + window.location.pathname + '?' + urlSearchParams.toString();
+
+
+        // Check if the current page is not already the specified LVA page
+        if (currentURL !== specifiedURL) {
+            // Navigate to the LVA page
+            window.location.href = specifiedURL;
+        }
+		};
+  
+  	self.navigateToLVA = function () {
+        
+        var specifiedURL = 'https://tiss.tuwien.ac.at/course/educationDetails.xhtml?courseNr=' + options.lvaNumber.replace(/[^\d]/, '');
+
+        // Get the current URL's search parameters
+        var urlSearchParams = new URLSearchParams(window.location.search);
+
+        // Check if the specified query parameters exist, and if true, delete them
+        if (urlSearchParams.has('dswid') && urlSearchParams.has('dsrid')) {
+            urlSearchParams.delete('dswid');
+            urlSearchParams.delete('dsrid');
+        }
+
+        // Build the modified URL
+        var currentURL = window.location.origin + window.location.pathname + '?' + urlSearchParams.toString();
+  
+        // Check if the current page is not already the specified LVA page
+        if (currentURL !== specifiedURL) {
+            // Navigate to the LVA page
+            window.location.href = specifiedURL;
+        }
+		};
+
 
     self.log = function (message) {
         console.log(message);
