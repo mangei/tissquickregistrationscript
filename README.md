@@ -2,6 +2,7 @@ TISS Quick Registration Script
 ===========================
 by [Manuel Geier](https://geier.io "Manuel Geier")
 
+⚠️ **IMPORTANT: This project is not maintained anymore. It might still work, but also might not anymore. Use at your own risk. Feel free to fork it. All the best for your studies!**
 
 ## What is it about?
 
@@ -36,7 +37,7 @@ See documentation within the script.
 
 ## Changelog
 
-Can also be found within the script.
+Can be found within the script.
 
 
 ## Support
@@ -45,3 +46,7 @@ If you find any errors or bugs, or have ideas for improvement, please simply cre
 https://github.com/mangei/tissquickregistrationscript/issues
 
 Thanks :)
+
+## Disclaimer
+
+By utilizing this script, you acknowledge and agree that I, the author, bear no responsibility for any consequences, damages, losses, or liabilities incurred as a result of its usage. This script is provided "as is," without any warranties or guarantees of any kind, expressed or implied. Users are solely responsible for assessing the suitability, accuracy, and safety of the script for their intended purposes. I disclaim all responsibility for any errors, omissions, or inaccuracies within the script. It is recommended that users exercise caution and diligence when employing this script, and they do so at their own risk.
