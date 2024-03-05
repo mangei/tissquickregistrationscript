@@ -222,6 +222,33 @@ SOFTWARE.
                 self.pageLog("Scripts starts at: " + self.getFormatedDate(options.specificStartTime));
                 self.pageLog("Delay adjustment in ms: " + options.delayAdjustmentInMs);
                 self.startTimer(options.specificStartTime.getTime() - options.delayAdjustmentInMs);
+
+                var examData = self.getExamDate(options.nameOfExam, options.dateOfExam);
+                if (examData.length > 1) {
+                  self.pageLog("Warning: Found more than one matching exam. Are you sure you want that?");
+                }
+                if (examData.length <= 0) {
+                  self.pageLog("Warning: Found no matching exams. Are you sure you want that?");
+                }
+                for(var i = 0; i < examData.length; i++) {
+                    var startTime = self.getExamStartDateTime(examData[i]);
+
+                    if (startTime) {
+                        console.log(options.specificStartTime, startTime);
+                        let timeDifference = options.specificStartTime.getTime() - startTime.getTime();
+                        if (timeDifference > 1000 * 10) {
+                            self.pageLog("Warning: The start time is " + (timeDifference/1000) + " seconds after the exam (" + examData[i].innerText + ") registration start time.");
+                        }
+                        if (timeDifference < -1000 * 60 * 60 * 24) {
+                            self.pageLog("Warning: The start time is way before the exam (" + examData[i].innerText + ") registration start time.");
+                        }
+                    } else {
+                        self.pageLog("Warning: The exam (" + examData[i].innerText + ") registration start time is unknown.");
+                    }
+                }
+                if (Math.abs(options.delayAdjustmentInMs) > 1000 * 60 * 10) {
+                  self.pageLog("Warning: Delay adjustment is longer than 10 minutes. Are you sure you want that?");
+                }
             } else {
                 self.analysePage();
             }
@@ -623,6 +650,28 @@ SOFTWARE.
             return examDate.match(dateOfExam);
         });
     };
+
+    self.getExamStartDateTime = function (examData) {
+        // Doesn't really handle time zones, I guess. Then again, this function is only used as a quick check
+        var examStartTimeData = [...examData.parentNode.parentNode.querySelectorAll("fieldset li span")].filter(v => v.id.includes("appBeginn"));
+        if (!examStartTimeData || examStartTimeData.length < 1) {
+          return null;
+        }
+        var startDateTimeString = examStartTimeData[0].innerText.trim();
+
+        var dateTimeValues = startDateTimeString.match(/(\d+)\.(\d+)\.(\d+)[^\d]+(\d+):(\d+)/);
+        if (!dateTimeValues) return null;
+
+        return new Date(
+            +dateTimeValues[3],
+            +dateTimeValues[2] - 1,
+            +dateTimeValues[1],
+            +dateTimeValues[4],
+            +dateTimeValues[5],
+            0,
+            0
+        );
+    }
 
     self.highlight = function (object) {
         object.css("background-color", "lightgreen");
